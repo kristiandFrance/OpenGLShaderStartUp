@@ -29,6 +29,21 @@
     <None Include="Resources\Shaders\FixedColor.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="PositionOnly.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="VertexColor.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="VertexColor.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="VertexColorFade.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Shaders\VertexColorChange.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderLoader.h">
