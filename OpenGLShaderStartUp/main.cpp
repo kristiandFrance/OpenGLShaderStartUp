@@ -23,12 +23,12 @@ GLfloat Vertices_Tri[] = {
 // Quad Tri Verts
 GLfloat Vertices_Quad[] = {
 	// Postition			// Colour
-	-0.3f,  0.3f,  0.0f,	1.0f, 0.2f, 0.0f,	 // Top Left
-	-0.3f, -0.3f,  0.0f,	0.0f, 1.0f, 0.5f,	 // Bottom Left
-	 0.3f, -0.3f,  0.0f,	0.6f, 1.0f, 0.0f,	 // Bottom Right
-	-0.3f,  0.3f,  0.0f,	1.0f, 0.2f, 0.0f,	 // Top Left
-	 0.3f,  0.3f,  0.0f,	0.4f, 0.0f, 1.0f,	 // Top Right
-	 0.3f, -0.3f,  0.0f,	0.6f, 1.0f, 0.0f,	 // Bottom Right
+	-0.3f,  0.3f,  0.0f,	0.5f, 0.2f, 0.6f,	 // Top Left
+	-0.3f, -0.3f,  0.0f,	0.2f, 1.0f, 0.5f,	 // Bottom Left
+	 0.3f, -0.3f,  0.0f,	0.6f, 1.0f, 0.2f,	 // Bottom Right
+	-0.3f,  0.3f,  0.0f,	0.5f, 0.2f, 0.6f,	 // Top Left
+	 0.3f,  0.3f,  0.0f,	0.2f, 0.1f, 1.0f,	 // Top Right
+	 0.3f, -0.3f,  0.0f,	0.6f, 1.0f, 0.2f,	 // Bottom Right
 
 };
 
