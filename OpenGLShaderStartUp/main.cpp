@@ -1,8 +1,12 @@
 // Library Inlcudes
 #include <glew.h>
 #include <glfw3.h>
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
 #include <iostream>
 #include "ShaderLoader.h"
+
 
 
 //++++++++++++++++++++++++++
@@ -12,50 +16,37 @@ GLFWwindow* Window = nullptr;	// Window Var.
 int Program_FixedTri;			// Program Var.
 float CurrentTime;
 
-// Tri. Verts
-GLfloat Vertices_Tri[] = {
-	// Postition		// Colour
-	 0.0f, 0.0f, 0.0f,	1.0f, 0.0f, 0.0f,	 // Top Right
-	-0.5f, 0.8f, 0.0f,	0.0f, 1.0f, 0.0f,	 // Top Left
-	 0.5f, 0.8f, 0.0f,	0.0f, 0.0f, 1.0f,	 // Bottom Center
-};
-
-// Quad Tri Verts
-GLfloat Vertices_Quad[] = {
-	// Postition			// Colour
-	-0.3f,  0.3f,  0.0f,	0.5f, 0.2f, 0.6f,	 // Top Left
-	-0.3f, -0.3f,  0.0f,	0.2f, 1.0f, 0.5f,	 // Bottom Left
-	 0.3f, -0.3f,  0.0f,	0.6f, 1.0f, 0.2f,	 // Bottom Right
-	-0.3f,  0.3f,  0.0f,	0.5f, 0.2f, 0.6f,	 // Top Left
-	 0.3f,  0.3f,  0.0f,	0.2f, 0.1f, 1.0f,	 // Top Right
-	 0.3f, -0.3f,  0.0f,	0.6f, 1.0f, 0.2f,	 // Bottom Right
-
-};
-
 // Quad2 Tri Verts
-GLfloat Vertices_Quad2[] = {
-	// Postition			// Colour
-	-0.1f,  0.1f,  0.0f,	1.0f, 0.2f, 0.0f,	 // Top Left
-	-0.1f, -0.1f,  0.0f,	0.0f, 1.0f, 0.5f,	 // Bottom Left
-	 0.1f, -0.1f,  0.0f,	0.6f, 1.0f, 0.0f,	 // Bottom Right
-	-0.1f,  0.1f,  0.0f,	1.0f, 0.2f, 0.0f,	 // Top Left
-	 0.1f,  0.1f,  0.0f,	0.4f, 0.0f, 1.0f,	 // Top Right
-	 0.1f, -0.1f,  0.0f,	0.6f, 1.0f, 0.0f,	 // Bottom Right
-
+GLfloat Vertices_Indexed_Quad[] = {
+	// Index	// Postition			// Colour
+	/* 0 */		-0.5f,  0.5f,  0.0f,	1.0f, 0.0f, 0.0f,	 // Top Left
+	/* 1 */		-0.5f, -0.5f,  0.0f,	0.0f, 1.0f, 0.0f,	 // Bottom Left
+	/* 2 */		 0.5f, -0.5f,  0.0f,	1.0f, 0.0f, 1.0f,	 // Bottom Right
+	/* 3 */		 0.5f,  0.5f,  0.0f,	0.0f, 1.0f, 1.0f,	 // Top Right
 };
 
-GLuint Program_ColorFade;
+GLuint Program_WorldSpace;
 
-// Creating Tri. VBO/VAO
-//GLuint VBO_Tri;
-//GLuint VAO_Tri;
+// Creating VBO/VAO and Indices for Quad EBO
+GLuint VAO_Indexed_Quad;
+GLuint EBO_Indexed_Quad;
+GLuint VBO_Indexed_Quad;
+GLuint Indices_Quad[] = {
+	0, 1, 2,	// First Tri   ( TL -> BL -> BR )
+	0, 2, 3,	// Second Tri  ( TL -> BR -> TR )
+};
 
-// Creating Quad VBO/VAO
-GLuint VBO_Quad;
-GLuint VAO_Quad;
-GLuint VBO_Quad2;
-GLuint VAO_Quad2;
+// Object Matrices and Components
+glm::vec3 QuadPosition = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::mat4 TranslationMat;
 
+float QuadRotationAngle = 0.0f;
+glm::mat4 RotationMat;
+
+glm::vec3 QuadScale = glm::vec3(0.5f, 0.5f, 1.0f);
+glm::mat4 ScaleMat;
+
+glm::mat4 QuadModelMat;
 
 //++++++++++++++++++++++++++
 
@@ -65,35 +56,23 @@ GLuint VAO_Quad2;
 void InitialSetup()
 {
 
-
-
-	Program_ColorFade = ShaderLoader::CreateProgram( "Resources/Shaders/VertexColor.vert",
+	Program_WorldSpace = ShaderLoader::CreateProgram( "Resources/Shaders/WorldSpace.vert",
 													 "Resources/Shaders/VertexColorChange.frag");
 
 
-	// Generate The VAO For Tri.
-	/*glGenVertexArrays(1, &VAO_Tri);
-	glBindVertexArray(VAO_Tri);*/
+	// Generate VAO For Quad
+	glGenVertexArrays(1, &VAO_Indexed_Quad);
+	glBindVertexArray(VAO_Indexed_Quad);
 
-	// Generate The VAO For Quad
-	glGenVertexArrays(1, &VAO_Quad);
-	glBindVertexArray(VAO_Quad);
+	// Generate EBO For Quad
+	glGenBuffers(1, &EBO_Indexed_Quad);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_Indexed_Quad);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Quad), Indices_Quad, GL_STATIC_DRAW);
 
-	//glGenVertexArrays(1, &VAO_Quad2);
-	//glBindVertexArray(VAO_Quad2);
-
-	// Generate The VBO For Tri.
-	/*glGenBuffers(1, &VBO_Tri);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_Tri);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Tri), Vertices_Tri, GL_STATIC_DRAW);*/
-
-	glGenBuffers(1, &VBO_Quad);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_Quad);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Quad), Vertices_Quad, GL_STATIC_DRAW);
-
-	//glGenBuffers(1, &VBO_Quad2);
-	//glBindBuffer(GL_ARRAY_BUFFER, VBO_Quad2);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Quad2), Vertices_Quad2, GL_STATIC_DRAW);
+	// Generate VBO For Quad
+	glGenBuffers(1, &VBO_Indexed_Quad);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_Indexed_Quad);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Indexed_Quad), Vertices_Indexed_Quad, GL_STATIC_DRAW);
 
 
 	// Set the Vertex Attribute Information
@@ -118,6 +97,13 @@ void Update()
 
 	// Get Current Time
 	CurrentTime = glfwGetTime();
+
+	// Calculate the Model Matrix
+	TranslationMat = glm::translate(glm::mat4(1.0f), QuadPosition);
+	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(QuadRotationAngle + (sin(CurrentTime) / 2 + 0.5f) * 360), glm::vec3(0.0f, 0.0f, 1.0f));
+	ScaleMat = glm::scale(glm::mat4(1.0f), QuadScale + (sin(CurrentTime) / 2 + 0.5f));
+	QuadModelMat = TranslationMat * RotationMat * ScaleMat;
+
 }
 
 void Render()
@@ -125,16 +111,19 @@ void Render()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// Bind Assets
-	glUseProgram(Program_ColorFade);
-	glBindVertexArray(VAO_Quad);
-	//glBindVertexArray(VAO_Quad2);
+	glUseProgram(Program_WorldSpace);
+	glBindVertexArray(VAO_Indexed_Quad);
 
 	// Send Vars to shaders via "Uniform"
-	GLint CurrentTimeLoc = glGetUniformLocation(Program_ColorFade, "CurrentTime");
+	GLint CurrentTimeLoc = glGetUniformLocation(Program_WorldSpace, "CurrentTime");
 	glUniform1f(CurrentTimeLoc, CurrentTime);
 
-	// Render the Tri.
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	// Send Model Matrix via Uniform
+	GLint ModelMatLoc = glGetUniformLocation(Program_WorldSpace, "QuadModelMat");
+	glUniformMatrix4fv(ModelMatLoc, 1, GL_FALSE, glm::value_ptr(QuadModelMat));
+
+	// Render the Quad using EBO
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 
 	// Unbind Assets
@@ -157,7 +146,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 
 	// Create an GLFW controlled context window
-	Window = glfwCreateWindow(800, 800, "YOOOO THIS SHIT WORKS!", NULL, NULL);
+	Window = glfwCreateWindow(800, 800, "FML, I WANT TO DIE HAHAHAHHAHAHA!", NULL, NULL);
 	if (Window == NULL)
 	{
 		std::cout << "GLFW failed to init. properly. Terminating program." << std::endl;
