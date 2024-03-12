@@ -47,6 +47,12 @@
     <None Include="Resources\Shaders\WorldSpace.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Resources\Shaders\Texture.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Shaders\Texture.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderLoader.h">

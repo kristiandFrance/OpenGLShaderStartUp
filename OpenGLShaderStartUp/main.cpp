@@ -4,6 +4,8 @@
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 #include <iostream>
 #include "ShaderLoader.h"
 
@@ -17,17 +19,19 @@ float pi = 3.1415926535f;
 GLFWwindow* Window = nullptr;	// Window Var.
 int Program_FixedTri;			// Program Var.
 float CurrentTime;
+float PreviousTime;
+float DeltaTime;
 
 // Quad2 Tri Verts
 GLfloat Vertices_Indexed_Quad[] = {
-	// Index	// Postition			// Colour
-	/* 0 */		-0.5f,  0.5f,  0.0f,	1.0f, 0.0f, 0.0f,	 // Top Left
-	/* 1 */		-0.5f, -0.5f,  0.0f,	0.0f, 1.0f, 0.0f,	 // Bottom Left
-	/* 2 */		 0.5f, -0.5f,  0.0f,	1.0f, 0.0f, 1.0f,	 // Bottom Right
-	/* 3 */		 0.5f,  0.5f,  0.0f,	0.0f, 1.0f, 1.0f,	 // Top Right
+	// Index	// Postition			// Colour			// Texture Coords	
+	/* 0 */		-0.5f,  0.5f,  0.0f,	1.0f, 0.0f, 0.0f,	-2.0f,  2.0f,			// Top Left
+	/* 1 */		-0.5f, -0.5f,  0.0f,	0.0f, 1.0f, 0.0f,	-2.0f, -2.0f,			// Bottom Left
+	/* 2 */		 0.5f, -0.5f,  0.0f,	1.0f, 0.0f, 1.0f,	 2.0f, -2.0f,			// Bottom Right
+	/* 3 */		 0.5f,  0.5f,  0.0f,	0.0f, 1.0f, 1.0f,	 2.0f,  2.0f,			// Top Right
 };
 
-GLuint Program_WorldSpace;
+GLuint Program_Texture;
 
 // Creating VBO/VAO and Indices for Quad EBO
 GLuint VAO_Indexed_Quad;
@@ -45,10 +49,12 @@ glm::mat4 TranslationMat;
 float QuadRotationAngle = 0.0f;
 glm::mat4 RotationMat;
 
-glm::vec3 QuadScale = glm::vec3(0.5f, 0.5f, 1.0f);
+glm::vec3 QuadScale = glm::vec3(1.5f, 1.5f, 1.0f);
 glm::mat4 ScaleMat;
 
 glm::mat4 QuadModelMat;
+
+GLuint AwesomeFaceTexture;
 
 //++++++++++++++++++++++++++
 
@@ -57,10 +63,19 @@ glm::mat4 QuadModelMat;
 
 void InitialSetup()
 {
+	// Load the Image Data
+	int ImageWidth;
+	int ImageHeight;
+	int ImageComponents;
 
-	Program_WorldSpace = ShaderLoader::CreateProgram( "Resources/Shaders/WorldSpace.vert",
-													 "Resources/Shaders/VertexColorChange.frag");
+	stbi_set_flip_vertically_on_load(true);
+	unsigned char* ImageData = stbi_load(	"Resources/Textures/zerotwo.png",
+											&ImageWidth, &ImageHeight, &ImageComponents, 0);
 
+	Program_Texture = ShaderLoader::CreateProgram( "Resources/Shaders/Texture.vert",
+													 "Resources/Shaders/Texture.frag");
+
+	
 
 	// Generate VAO For Quad
 	glGenVertexArrays(1, &VAO_Indexed_Quad);
@@ -78,12 +93,31 @@ void InitialSetup()
 
 
 	// Set the Vertex Attribute Information
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 
 	// Set the Vertex Color Information
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
+
+	// Set the Texture Information
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(2);
+
+	// Create and bin a new texture var
+	glGenTextures(1, &AwesomeFaceTexture);
+	glBindTexture(GL_TEXTURE_2D, AwesomeFaceTexture);
+
+	// Check how many components the loaded image has (RGBA or RGB)
+	GLint LoadedComponents = (ImageComponents == 4) ? GL_RGBA : GL_RGB;
+
+	// Populate the texture with the image data
+	glTexImage2D(	GL_TEXTURE_2D, 0, LoadedComponents, ImageWidth, ImageHeight, 0,
+					LoadedComponents, GL_UNSIGNED_BYTE, ImageData);
+
+	glGenerateMipmap(GL_TEXTURE_2D);
+	stbi_image_free(ImageData);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 
 	// Set the colour of the window for when the buffer is cleared
@@ -98,13 +132,19 @@ void Update()
 	glfwPollEvents();
 
 	// Get Current Time
+	PreviousTime = CurrentTime;
 	CurrentTime = glfwGetTime();
+	DeltaTime = CurrentTime - PreviousTime;
+
+	//QuadRotationAngle += DeltaTime * (1 / DeltaTime);
+
 
 	// Calculate the Model Matrix
-	QuadPosition.x = sin(CurrentTime);
-	QuadPosition.y = sin(CurrentTime - (pi / 2.0f));
+	//QuadPosition.x = sin(CurrentTime);
+	//QuadPosition.y = sin(CurrentTime - (pi / 2.0f));
+
 	TranslationMat = glm::translate(glm::mat4(1.0f), QuadPosition);
-	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(QuadRotationAngle + (CurrentTime * pi * 18)), glm::vec3(0.0f, 0.0f, 1.0f));
+	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(QuadRotationAngle), glm::vec3(0.0f, 0.0f, 1.0f));
 	ScaleMat = glm::scale(glm::mat4(1.0f), QuadScale/* + (sin(CurrentTime) / 2 + 0.5f)*/);
 	QuadModelMat = TranslationMat * RotationMat * ScaleMat;
 
@@ -115,16 +155,27 @@ void Render()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// Bind Assets
-	glUseProgram(Program_WorldSpace);
-	glBindVertexArray(VAO_Indexed_Quad);
+	glUseProgram(Program_Texture);
+	glBindVertexArray(VAO_Indexed_Quad);	
 
 	// Send Vars to shaders via "Uniform"
-	GLint CurrentTimeLoc = glGetUniformLocation(Program_WorldSpace, "CurrentTime");
+	GLint CurrentTimeLoc = glGetUniformLocation(Program_Texture, "CurrentTime");
 	glUniform1f(CurrentTimeLoc, CurrentTime);
 
 	// Send Model Matrix via Uniform
-	GLint ModelMatLoc = glGetUniformLocation(Program_WorldSpace, "QuadModelMat");
+	GLint ModelMatLoc = glGetUniformLocation(Program_Texture, "QuadModelMat");
 	glUniformMatrix4fv(ModelMatLoc, 1, GL_FALSE, glm::value_ptr(QuadModelMat));
+
+	// Bind Texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, AwesomeFaceTexture);
+	glUniform1i(glGetUniformLocation(Program_Texture, "Texture0"), 0);
+
+	// Setting the filtering and mipmap parameters for this texture
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	// Render the Quad using EBO
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -195,3 +246,5 @@ int main()
 
 
 }
+
+

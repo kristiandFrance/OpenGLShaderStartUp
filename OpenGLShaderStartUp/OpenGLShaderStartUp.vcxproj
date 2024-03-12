@@ -71,11 +71,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir)/Dependencies/GLEW;$(ProjectDir)/Dependencies/GLFW;$(ProjectDir)/Dependencies/GLM</IncludePath>
+    <IncludePath>$(ProjectDir)/Dependencies/GLEW;$(ProjectDir)/Dependencies/GLFW;$(ProjectDir)/Dependencies/GLM;$(ProjectDir)/Dependencies/STB</IncludePath>
     <LibraryPath>$(ProjectDir)/Dependencies/GLEW;$(ProjectDir)/Dependencies/GLFW;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir)/Dependencies/GLEW;$(ProjectDir)/Dependencies/GLFW;$(ProjectDir)/Dependencies/GLM</IncludePath>
+    <IncludePath>$(ProjectDir)/Dependencies/GLEW;$(ProjectDir)/Dependencies/GLFW;$(ProjectDir)/Dependencies/GLM;$(ProjectDir)/Dependencies/STB</IncludePath>
     <LibraryPath>$(ProjectDir)/Dependencies/GLEW;$(ProjectDir)/Dependencies/GLFW;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -144,6 +144,8 @@
     <None Include="PositionOnly.vert" />
     <None Include="Resources\Shaders\FixedColor.frag" />
     <None Include="Resources\Shaders\FixedTriangle.vert" />
+    <None Include="Resources\Shaders\Texture.frag" />
+    <None Include="Resources\Shaders\Texture.vert" />
     <None Include="Resources\Shaders\VertexColorChange.frag" />
     <None Include="Resources\Shaders\WorldSpace.vert" />
     <None Include="VertexColor.frag" />
