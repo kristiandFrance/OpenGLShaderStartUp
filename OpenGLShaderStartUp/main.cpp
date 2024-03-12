@@ -12,6 +12,8 @@
 //++++++++++++++++++++++++++
 //		GLOBAL VARS
 
+float pi = 3.1415926535f;
+
 GLFWwindow* Window = nullptr;	// Window Var.
 int Program_FixedTri;			// Program Var.
 float CurrentTime;
@@ -99,9 +101,11 @@ void Update()
 	CurrentTime = glfwGetTime();
 
 	// Calculate the Model Matrix
+	QuadPosition.x = sin(CurrentTime);
+	QuadPosition.y = sin(CurrentTime - (pi / 2.0f));
 	TranslationMat = glm::translate(glm::mat4(1.0f), QuadPosition);
-	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(QuadRotationAngle + (sin(CurrentTime) / 2 + 0.5f) * 360), glm::vec3(0.0f, 0.0f, 1.0f));
-	ScaleMat = glm::scale(glm::mat4(1.0f), QuadScale + (sin(CurrentTime) / 2 + 0.5f));
+	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(QuadRotationAngle + (CurrentTime * pi * 18)), glm::vec3(0.0f, 0.0f, 1.0f));
+	ScaleMat = glm::scale(glm::mat4(1.0f), QuadScale/* + (sin(CurrentTime) / 2 + 0.5f)*/);
 	QuadModelMat = TranslationMat * RotationMat * ScaleMat;
 
 }
