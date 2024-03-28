@@ -1,14 +1,10 @@
 // Library Inlcudes
-#include <glew.h>
-#include <glfw3.h>
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <iostream>
 #include "ShaderLoader.h"
-
+#include "Hexagon.h"
+#include "Quad.h"
 
 
 //++++++++++++++++++++++++++
@@ -18,43 +14,23 @@ float pi = 3.1415926535f;
 
 GLFWwindow* Window = nullptr;	// Window Var.
 int Program_FixedTri;			// Program Var.
-float CurrentTime;
+float CurrentTime{ 0 };
 float PreviousTime;
 float DeltaTime;
+float ElapsedTime;
+int CurrentFrame{ 0 };
+glm::vec3 ColorJumping;
+glm::vec3 Color = glm::vec3(1.0f, 0.0f, 0.0f);
 
-// Quad2 Tri Verts
-GLfloat Vertices_Indexed_Quad[] = {
-	// Index	// Postition			// Colour			// Texture Coords	
-	/* 0 */		-0.5f,  0.5f,  0.0f,	1.0f, 0.0f, 0.0f,	-2.0f,  2.0f,			// Top Left
-	/* 1 */		-0.5f, -0.5f,  0.0f,	0.0f, 1.0f, 0.0f,	-2.0f, -2.0f,			// Bottom Left
-	/* 2 */		 0.5f, -0.5f,  0.0f,	1.0f, 0.0f, 1.0f,	 2.0f, -2.0f,			// Bottom Right
-	/* 3 */		 0.5f,  0.5f,  0.0f,	0.0f, 1.0f, 1.0f,	 2.0f,  2.0f,			// Top Right
-};
+// Create Quad Shape Class
+Quad QuadShape( 1.0f );
 
+// Create Hexagon Shape Class
+Hexagon HexShape( 0.5f );
+
+// Init Texture
 GLuint Program_Texture;
-
-// Creating VBO/VAO and Indices for Quad EBO
-GLuint VAO_Indexed_Quad;
-GLuint EBO_Indexed_Quad;
-GLuint VBO_Indexed_Quad;
-GLuint Indices_Quad[] = {
-	0, 1, 2,	// First Tri   ( TL -> BL -> BR )
-	0, 2, 3,	// Second Tri  ( TL -> BR -> TR )
-};
-
-// Object Matrices and Components
-glm::vec3 QuadPosition = glm::vec3(0.0f, 0.0f, 0.0f);
-glm::mat4 TranslationMat;
-
-float QuadRotationAngle = 0.0f;
-glm::mat4 RotationMat;
-
-glm::vec3 QuadScale = glm::vec3(1.5f, 1.5f, 1.0f);
-glm::mat4 ScaleMat;
-
-glm::mat4 QuadModelMat;
-
-GLuint AwesomeFaceTexture;
+GLuint ImageTexture;
 
 //++++++++++++++++++++++++++
 
@@ -69,56 +45,30 @@ void InitialSetup()
 	int ImageComponents;
 
 	stbi_set_flip_vertically_on_load(true);
-	unsigned char* ImageData = stbi_load(	"Resources/Textures/zerotwo.png",
+	unsigned char* ImageData = stbi_load(	"Resources/Textures/zerotwojump.png",
 											&ImageWidth, &ImageHeight, &ImageComponents, 0);
 
 	Program_Texture = ShaderLoader::CreateProgram( "Resources/Shaders/Texture.vert",
 													 "Resources/Shaders/Texture.frag");
 
 	
-
-	// Generate VAO For Quad
-	glGenVertexArrays(1, &VAO_Indexed_Quad);
-	glBindVertexArray(VAO_Indexed_Quad);
-
-	// Generate EBO For Quad
-	glGenBuffers(1, &EBO_Indexed_Quad);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_Indexed_Quad);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices_Quad), Indices_Quad, GL_STATIC_DRAW);
-
-	// Generate VBO For Quad
-	glGenBuffers(1, &VBO_Indexed_Quad);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_Indexed_Quad);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices_Indexed_Quad), Vertices_Indexed_Quad, GL_STATIC_DRAW);
-
-
-	// Set the Vertex Attribute Information
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(0);
-
-	// Set the Vertex Color Information
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(1);
-
-	// Set the Texture Information
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(2);
+	QuadShape.GenerateInfo();
+	HexShape.GenerateInfo();
 
 	// Create and bin a new texture var
-	glGenTextures(1, &AwesomeFaceTexture);
-	glBindTexture(GL_TEXTURE_2D, AwesomeFaceTexture);
+	glGenTextures(1, &ImageTexture);
+	glBindTexture(GL_TEXTURE_2D, ImageTexture);
 
 	// Check how many components the loaded image has (RGBA or RGB)
 	GLint LoadedComponents = (ImageComponents == 4) ? GL_RGBA : GL_RGB;
 
 	// Populate the texture with the image data
-	glTexImage2D(	GL_TEXTURE_2D, 0, LoadedComponents, ImageWidth, ImageHeight, 0,
-					LoadedComponents, GL_UNSIGNED_BYTE, ImageData);
+	glTexImage2D(GL_TEXTURE_2D, 0, LoadedComponents, ImageWidth, ImageHeight, 0,
+		LoadedComponents, GL_UNSIGNED_BYTE, ImageData);
 
 	glGenerateMipmap(GL_TEXTURE_2D);
 	stbi_image_free(ImageData);
 	glBindTexture(GL_TEXTURE_2D, 0);
-
 
 	// Set the colour of the window for when the buffer is cleared
 	glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
@@ -136,17 +86,62 @@ void Update()
 	CurrentTime = glfwGetTime();
 	DeltaTime = CurrentTime - PreviousTime;
 
-	//QuadRotationAngle += DeltaTime * (1 / DeltaTime);
+	
 
 
-	// Calculate the Model Matrix
+	// QUAD STUFFS
+	//QuadRotationAngle += DeltaTime * 60;
 	//QuadPosition.x = sin(CurrentTime);
-	//QuadPosition.y = sin(CurrentTime - (pi / 2.0f));
+	//QuadPosition.y = cos(CurrentTime);
+	QuadShape.TranslationMat = glm::translate(glm::mat4(1.0f), QuadShape.Position);
+	QuadShape.RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(QuadShape.RotationAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+	QuadShape.ScaleMat = glm::scale(glm::mat4(1.0f), QuadShape.Scale/* + (sin(CurrentTime) / 2 + 0.5f)*/);
+	QuadShape.ModelMat = QuadShape.TranslationMat * QuadShape.RotationMat * QuadShape.ScaleMat;
 
-	TranslationMat = glm::translate(glm::mat4(1.0f), QuadPosition);
-	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(QuadRotationAngle), glm::vec3(0.0f, 0.0f, 1.0f));
-	ScaleMat = glm::scale(glm::mat4(1.0f), QuadScale/* + (sin(CurrentTime) / 2 + 0.5f)*/);
-	QuadModelMat = TranslationMat * RotationMat * ScaleMat;
+	// HEXAGON STUFFS
+	
+	auto dothestuff = [](float x) {
+		return (4 / 2 * pi) * std::fabs(std::fmod((x - pi / 2), 2 * pi) - pi) - 1.0f;
+		};
+
+	//HexShape.RotationAngle -= 0.636619f / pi * DeltaTime * 285;
+	HexShape.Position.x = sin(CurrentTime);
+	HexShape.Position.y = cos(CurrentTime);
+	HexShape.TranslationMat = glm::translate(glm::mat4(1.0f), HexShape.Position);
+	HexShape.RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(HexShape.RotationAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+	HexShape.ScaleMat = glm::scale(glm::mat4(1.0f), HexShape.Scale/* + (sin(CurrentTime) / 2 + 0.5f)*/);
+	HexShape.ModelMat = HexShape.TranslationMat * HexShape.RotationMat * HexShape.ScaleMat;
+
+	// Frame Indexing
+	ElapsedTime += DeltaTime;
+	if (ElapsedTime > 0.01)
+	{
+		CurrentFrame = (CurrentFrame < 52) ? CurrentFrame + 1 : 0;
+		ElapsedTime = 0;
+	}
+
+
+	// Color Chnage When Jumping
+	auto getRange = [=](float x) {
+		x *= 5;
+			if (std::fmod(x, 6.0f) <= 2) {
+				return 1.0f;
+			}
+			else if (std::fmod(x, 6.0f) <= 3.0f) {
+				return (3.0f - std::fmod(x, 6.0f));
+			}
+			else if (std::fmod(x, 6.0f) <= 5.0f) {
+				return 0.0f;
+			}
+			else {
+				return (std::fmod(x, 6.0f) - 5.0f);
+			}
+		};
+	
+	if (CurrentFrame == 1)
+		ColorJumping = glm::vec3(getRange(CurrentTime + 2), getRange(CurrentTime), getRange(CurrentTime - 2));
+
+
 
 }
 
@@ -156,19 +151,33 @@ void Render()
 
 	// Bind Assets
 	glUseProgram(Program_Texture);
-	glBindVertexArray(VAO_Indexed_Quad);	
+
+
+	glBindVertexArray(HexShape.getVAO());
+
+	// Send CurrentFrame to shaders via uniform
+	GLint CurrentFrameLoc = glGetUniformLocation(Program_Texture, "CurrentFrame");
+	glUniform1i(CurrentFrameLoc, CurrentFrame);
+
+	// Send ColorJumping to shaders via uniform
+	GLint ColorLoc = glGetUniformLocation(Program_Texture, "Color");
+	glUniform3fv(ColorLoc, 1, glm::value_ptr(Color));
+
+	// Send ColorJumping to shaders via uniform
+	GLint ColorJumpingLoc = glGetUniformLocation(Program_Texture, "ColorJumping");
+	glUniform3fv(ColorJumpingLoc, 1, glm::value_ptr(ColorJumping));
 
 	// Send Vars to shaders via "Uniform"
 	GLint CurrentTimeLoc = glGetUniformLocation(Program_Texture, "CurrentTime");
 	glUniform1f(CurrentTimeLoc, CurrentTime);
 
 	// Send Model Matrix via Uniform
-	GLint ModelMatLoc = glGetUniformLocation(Program_Texture, "QuadModelMat");
-	glUniformMatrix4fv(ModelMatLoc, 1, GL_FALSE, glm::value_ptr(QuadModelMat));
+	GLint ModelMatLoc = glGetUniformLocation(Program_Texture, "ModelMat");
+	glUniformMatrix4fv(ModelMatLoc, 1, GL_FALSE, glm::value_ptr(HexShape.ModelMat));
 
 	// Bind Texture
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, AwesomeFaceTexture);
+	glBindTexture(GL_TEXTURE_2D, ImageTexture);
 	glUniform1i(glGetUniformLocation(Program_Texture, "Texture0"), 0);
 
 	// Setting the filtering and mipmap parameters for this texture
@@ -176,15 +185,51 @@ void Render()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	
 
-	// Render the Quad using EBO
+	// Render the Hexagon using EBO
+	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
+
+
+
+	// Render the Quad
+	glBindVertexArray(QuadShape.getVAO());
+	// Send CurrentFrame to shaders via uniform
+	CurrentFrameLoc = glGetUniformLocation(Program_Texture, "CurrentFrame");
+	glUniform1i(CurrentFrameLoc, CurrentFrame);
+
+	// Send ColorJumping to shaders via uniform
+	ColorLoc = glGetUniformLocation(Program_Texture, "Color");
+	glUniform3fv(ColorLoc, 1, glm::value_ptr(Color));
+
+	// Send ColorJumping to shaders via uniform
+	ColorJumpingLoc = glGetUniformLocation(Program_Texture, "ColorJumping");
+	glUniform3fv(ColorJumpingLoc, 1, glm::value_ptr(ColorJumping));
+
+	// Send Vars to shaders via "Uniform"
+	CurrentTimeLoc = glGetUniformLocation(Program_Texture, "CurrentTime");
+	glUniform1f(CurrentTimeLoc, CurrentTime);
+
+	// Send Model Matrix via Uniform
+	ModelMatLoc = glGetUniformLocation(Program_Texture, "ModelMat");
+	glUniformMatrix4fv(ModelMatLoc, 1, GL_FALSE, glm::value_ptr(QuadShape.ModelMat));
+
+	// Bind Texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, ImageTexture);
+	glUniform1i(glGetUniformLocation(Program_Texture, "Texture0"), 0);
+
+	// Setting the filtering and mipmap parameters for this texture
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
 
 	// Unbind Assets
 	glBindVertexArray(0);
 	glUseProgram(0);
-
 
 
 	glfwSwapBuffers(Window);
@@ -194,6 +239,8 @@ void Render()
 
 int main()
 {
+
+
 	// Initialising GLFW and setting the version to 4.6 with compatability profile
 	glfwInit();
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
@@ -201,7 +248,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 
 	// Create an GLFW controlled context window
-	Window = glfwCreateWindow(800, 800, "FML, I WANT TO DIE HAHAHAHHAHAHA!", NULL, NULL);
+	Window = glfwCreateWindow(800, 800, "I wonder if the 3rd story is high enough..", NULL, NULL);
 	if (Window == NULL)
 	{
 		std::cout << "GLFW failed to init. properly. Terminating program." << std::endl;
