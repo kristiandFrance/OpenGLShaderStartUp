@@ -62,6 +62,9 @@
     <None Include="Resources\Shaders\Texture.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Resources\Shaders\ClipSpace.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderLoader.h">

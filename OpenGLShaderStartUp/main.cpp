@@ -13,6 +13,8 @@
 float pi = 3.1415926535f;
 
 GLFWwindow* Window = nullptr;	// Window Var.
+int WindowHeight = 800;
+int WindowWidth = 800;	// Window Res.
 int Program_FixedTri;			// Program Var.
 float CurrentTime{ 0 };
 float PreviousTime;
@@ -32,6 +34,19 @@ Hexagon HexShape( 0.5f );
 GLuint Program_Texture;
 GLuint ImageTexture;
 
+// Camera
+glm::mat4 ProjectionMat;
+glm::mat4 ViewMat;
+glm::vec3 CameraPos = glm::vec3(0.0f, 0.0f, 1.0f);
+glm::vec3 CameraLookDir;
+glm::vec3 CameraTargetPos = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 CameraUpDir = glm::vec3(0.0f, 1.0f, 0.0f);
+
+// Object Matrices and Components
+glm::vec3 ObjPosition = glm::vec3(0.0f, -100.0f, 0.0f);
+float ObjRotation = 0.0f;
+glm::vec3 ObjScale = glm::vec3(400.0f, 400.0f, 1.0f);
+
 //++++++++++++++++++++++++++
 
 
@@ -48,8 +63,20 @@ void InitialSetup()
 	unsigned char* ImageData = stbi_load(	"Resources/Textures/zerotwojump.png",
 											&ImageWidth, &ImageHeight, &ImageComponents, 0);
 
-	Program_Texture = ShaderLoader::CreateProgram( "Resources/Shaders/Texture.vert",
+	Program_Texture = ShaderLoader::CreateProgram( "Resources/Shaders/ClipSpace.vert",
 													 "Resources/Shaders/Texture.frag");
+
+	// Calculate the Projection matrix - Anchor Point (0,0) at the top left
+	ProjectionMat = glm::ortho(0.0f, (float)WindowWidth, (float)WindowHeight, 0.0f, 0.1f, 100.0f);
+
+	// Calculate the Projection Matrix - Anchor Point (0,0) at the center
+	float HalfWindowWidth = (float)WindowWidth * 0.5f;
+	float HalfWindowHeight = (float)WindowHeight * 0.5f;
+	ProjectionMat = glm::ortho(-HalfWindowWidth, HalfWindowWidth, -HalfWindowHeight, HalfWindowHeight, 0.1f, 100.0f);
+
+	// Calculate the View Matrix from the camera vars.
+	ViewMat = glm::lookAt(CameraPos, CameraTargetPos, CameraUpDir);
+	//ViewMat = glm::lookAt(CameraPos, CameraPos + CameraLookDir, CameraUpDir);
 
 	
 	QuadShape.GenerateInfo();
@@ -86,8 +113,6 @@ void Update()
 	CurrentTime = glfwGetTime();
 	DeltaTime = CurrentTime - PreviousTime;
 
-	
-
 
 	// QUAD STUFFS
 	//QuadRotationAngle += DeltaTime * 60;
@@ -98,13 +123,7 @@ void Update()
 	QuadShape.ScaleMat = glm::scale(glm::mat4(1.0f), QuadShape.Scale/* + (sin(CurrentTime) / 2 + 0.5f)*/);
 	QuadShape.ModelMat = QuadShape.TranslationMat * QuadShape.RotationMat * QuadShape.ScaleMat;
 
-	// HEXAGON STUFFS
-	
-	auto dothestuff = [](float x) {
-		return (4 / 2 * pi) * std::fabs(std::fmod((x - pi / 2), 2 * pi) - pi) - 1.0f;
-		};
-
-	//HexShape.RotationAngle -= 0.636619f / pi * DeltaTime * 285;
+	// HEXAGON STUFFS	
 	HexShape.Position.x = sin(CurrentTime);
 	HexShape.Position.y = cos(CurrentTime);
 	HexShape.TranslationMat = glm::translate(glm::mat4(1.0f), HexShape.Position);
@@ -151,8 +170,12 @@ void Render()
 
 	// Bind Assets
 	glUseProgram(Program_Texture);
-
-
+	GLint CurrentFrameLoc;
+	GLint ColorLoc;
+	GLint CurrentTimeLoc;
+	GLint ColorJumpingLoc;
+	GLint ModelMatLoc;
+	/*
 	glBindVertexArray(HexShape.getVAO());
 
 	// Send CurrentFrame to shaders via uniform
@@ -175,22 +198,11 @@ void Render()
 	GLint ModelMatLoc = glGetUniformLocation(Program_Texture, "ModelMat");
 	glUniformMatrix4fv(ModelMatLoc, 1, GL_FALSE, glm::value_ptr(HexShape.ModelMat));
 
-	// Bind Texture
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, ImageTexture);
-	glUniform1i(glGetUniformLocation(Program_Texture, "Texture0"), 0);
-
-	// Setting the filtering and mipmap parameters for this texture
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	
 
 	// Render the Hexagon using EBO
 	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
 
-
+	*/
 
 	// Render the Quad
 	glBindVertexArray(QuadShape.getVAO());
@@ -210,10 +222,19 @@ void Render()
 	CurrentTimeLoc = glGetUniformLocation(Program_Texture, "CurrentTime");
 	glUniform1f(CurrentTimeLoc, CurrentTime);
 
+	// Camera?
+	GLint ProjectionMatLoc = glGetUniformLocation(Program_Texture, "ProjectionMat");
+	glUniformMatrix4fv(ProjectionMatLoc, 1, GL_FALSE, glm::value_ptr(ProjectionMat));
+	GLint ViewMatLoc = glGetUniformLocation(Program_Texture, "ViewMat");
+	glUniformMatrix4fv(ViewMatLoc, 1, GL_FALSE, glm::value_ptr(ViewMat));
+
 	// Send Model Matrix via Uniform
 	ModelMatLoc = glGetUniformLocation(Program_Texture, "ModelMat");
 	glUniformMatrix4fv(ModelMatLoc, 1, GL_FALSE, glm::value_ptr(QuadShape.ModelMat));
 
+
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	
 	// Bind Texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, ImageTexture);
@@ -224,8 +245,7 @@ void Render()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	
 
 	// Unbind Assets
 	glBindVertexArray(0);
@@ -248,7 +268,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 
 	// Create an GLFW controlled context window
-	Window = glfwCreateWindow(800, 800, "I wonder if the 3rd story is high enough..", NULL, NULL);
+	Window = glfwCreateWindow(WindowWidth, WindowHeight, "I wonder if the 3rd story is high enough..", NULL, NULL);
 	if (Window == NULL)
 	{
 		std::cout << "GLFW failed to init. properly. Terminating program." << std::endl;
