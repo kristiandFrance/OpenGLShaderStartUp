@@ -34,6 +34,15 @@ Hexagon HexShape( 0.5f );
 GLuint Program_Texture;
 GLuint ImageTexture;
 
+// Uniform Vars
+GLint CurrentFrameLoc;
+GLint ColorLoc;
+GLint CurrentTimeLoc;
+GLint ColorJumpingLoc;
+GLint ProjectionMatLoc;
+GLint ViewMatLoc;
+GLint ModelMatLoc;
+
 // Camera
 glm::mat4 ProjectionMat;
 glm::mat4 ViewMat;
@@ -42,10 +51,6 @@ glm::vec3 CameraLookDir;
 glm::vec3 CameraTargetPos = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 CameraUpDir = glm::vec3(0.0f, 1.0f, 0.0f);
 
-// Object Matrices and Components
-glm::vec3 ObjPosition = glm::vec3(0.0f, -100.0f, 0.0f);
-float ObjRotation = 0.0f;
-glm::vec3 ObjScale = glm::vec3(400.0f, 400.0f, 1.0f);
 
 //++++++++++++++++++++++++++
 
@@ -170,71 +175,76 @@ void Render()
 
 	// Bind Assets
 	glUseProgram(Program_Texture);
-	GLint CurrentFrameLoc;
-	GLint ColorLoc;
-	GLint CurrentTimeLoc;
-	GLint ColorJumpingLoc;
-	GLint ModelMatLoc;
-	/*
+	
+	// Render the Hexagon
+	//--------------------------------------------------------
 	glBindVertexArray(HexShape.getVAO());
 
-	// Send CurrentFrame to shaders via uniform
-	GLint CurrentFrameLoc = glGetUniformLocation(Program_Texture, "CurrentFrame");
-	glUniform1i(CurrentFrameLoc, CurrentFrame);
-
-	// Send ColorJumping to shaders via uniform
-	GLint ColorLoc = glGetUniformLocation(Program_Texture, "Color");
-	glUniform3fv(ColorLoc, 1, glm::value_ptr(Color));
-
-	// Send ColorJumping to shaders via uniform
-	GLint ColorJumpingLoc = glGetUniformLocation(Program_Texture, "ColorJumping");
-	glUniform3fv(ColorJumpingLoc, 1, glm::value_ptr(ColorJumping));
-
-	// Send Vars to shaders via "Uniform"
-	GLint CurrentTimeLoc = glGetUniformLocation(Program_Texture, "CurrentTime");
-	glUniform1f(CurrentTimeLoc, CurrentTime);
-
-	// Send Model Matrix via Uniform
-	GLint ModelMatLoc = glGetUniformLocation(Program_Texture, "ModelMat");
-	glUniformMatrix4fv(ModelMatLoc, 1, GL_FALSE, glm::value_ptr(HexShape.ModelMat));
-
-
-	// Render the Hexagon using EBO
-	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
-
-	*/
-
-	// Render the Quad
-	glBindVertexArray(QuadShape.getVAO());
-	// Send CurrentFrame to shaders via uniform
+		// Send CurrentFrame to shaders via uniform
 	CurrentFrameLoc = glGetUniformLocation(Program_Texture, "CurrentFrame");
 	glUniform1i(CurrentFrameLoc, CurrentFrame);
 
-	// Send ColorJumping to shaders via uniform
+		// Send ColorJumping to shaders via uniform
 	ColorLoc = glGetUniformLocation(Program_Texture, "Color");
 	glUniform3fv(ColorLoc, 1, glm::value_ptr(Color));
 
-	// Send ColorJumping to shaders via uniform
+		// Send ColorJumping to shaders via uniform
 	ColorJumpingLoc = glGetUniformLocation(Program_Texture, "ColorJumping");
 	glUniform3fv(ColorJumpingLoc, 1, glm::value_ptr(ColorJumping));
 
-	// Send Vars to shaders via "Uniform"
+		// Send Vars to shaders via "Uniform"
 	CurrentTimeLoc = glGetUniformLocation(Program_Texture, "CurrentTime");
 	glUniform1f(CurrentTimeLoc, CurrentTime);
 
-	// Camera?
-	GLint ProjectionMatLoc = glGetUniformLocation(Program_Texture, "ProjectionMat");
+		// Camera
+	ProjectionMatLoc = glGetUniformLocation(Program_Texture, "ProjectionMat");
 	glUniformMatrix4fv(ProjectionMatLoc, 1, GL_FALSE, glm::value_ptr(ProjectionMat));
-	GLint ViewMatLoc = glGetUniformLocation(Program_Texture, "ViewMat");
+	ViewMatLoc = glGetUniformLocation(Program_Texture, "ViewMat");
 	glUniformMatrix4fv(ViewMatLoc, 1, GL_FALSE, glm::value_ptr(ViewMat));
 
-	// Send Model Matrix via Uniform
+		// Send Model Matrix via Uniform
+	ModelMatLoc = glGetUniformLocation(Program_Texture, "ModelMat");
+	glUniformMatrix4fv(ModelMatLoc, 1, GL_FALSE, glm::value_ptr(HexShape.ModelMat));
+
+		// Render the Hexagon using EBO
+	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
+	//--------------------------------------------------------
+
+	
+	// Render the Quad
+	//--------------------------------------------------------
+	glBindVertexArray(QuadShape.getVAO());
+
+		// Send CurrentFrame to shaders via uniform
+	CurrentFrameLoc = glGetUniformLocation(Program_Texture, "CurrentFrame");
+	glUniform1i(CurrentFrameLoc, CurrentFrame);
+
+		// Send ColorJumping to shaders via uniform
+	ColorLoc = glGetUniformLocation(Program_Texture, "Color");
+	glUniform3fv(ColorLoc, 1, glm::value_ptr(Color));
+
+		// Send ColorJumping to shaders via uniform
+	ColorJumpingLoc = glGetUniformLocation(Program_Texture, "ColorJumping");
+	glUniform3fv(ColorJumpingLoc, 1, glm::value_ptr(ColorJumping));
+
+		// Send Vars to shaders via "Uniform"
+	CurrentTimeLoc = glGetUniformLocation(Program_Texture, "CurrentTime");
+	glUniform1f(CurrentTimeLoc, CurrentTime);
+
+		// Camera
+	ProjectionMatLoc = glGetUniformLocation(Program_Texture, "ProjectionMat");
+	glUniformMatrix4fv(ProjectionMatLoc, 1, GL_FALSE, glm::value_ptr(ProjectionMat));
+	ViewMatLoc = glGetUniformLocation(Program_Texture, "ViewMat");
+	glUniformMatrix4fv(ViewMatLoc, 1, GL_FALSE, glm::value_ptr(ViewMat));
+
+		// Send Model Matrix via Uniform
 	ModelMatLoc = glGetUniformLocation(Program_Texture, "ModelMat");
 	glUniformMatrix4fv(ModelMatLoc, 1, GL_FALSE, glm::value_ptr(QuadShape.ModelMat));
 
-
+		// Render the Quad using EBO
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-	
+	//--------------------------------------------------------
+
 	// Bind Texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, ImageTexture);
