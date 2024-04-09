@@ -27,7 +27,7 @@ public:
 	float RotationAngle = 0.0f;
 	glm::mat4 RotationMat;
 
-	glm::vec3 Scale = glm::vec3(400.0f, 400.0f, 1.0f);
+	glm::vec3 Scale = glm::vec3(200.0f, 200.0f, 1.0f);
 	glm::mat4 ScaleMat;
 
 	glm::mat4 ModelMat;

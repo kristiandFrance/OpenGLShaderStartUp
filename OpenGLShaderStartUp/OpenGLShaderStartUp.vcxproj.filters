@@ -30,6 +30,9 @@
     <ClCompile Include="Shape.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\FixedTriangle.vert">
@@ -47,9 +50,6 @@
     <None Include="VertexColor.vert">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="VertexColorFade.frag">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="Resources\Shaders\VertexColorChange.frag">
       <Filter>Resource Files</Filter>
     </None>
@@ -65,6 +65,12 @@
     <None Include="Resources\Shaders\ClipSpace.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Resources\Shaders\VertexColorFade.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Shaders\Image.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderLoader.h">
@@ -77,6 +83,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Shape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

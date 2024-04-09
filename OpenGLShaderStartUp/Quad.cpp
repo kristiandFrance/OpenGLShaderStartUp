@@ -1,7 +1,9 @@
 #include "Quad.h"
 
-Quad::Quad(float _QuadSideLength)
+Quad::Quad(float _QuadSideLength, bool _IsAnimated)
 {
+	IsAnimated = _IsAnimated;
+
 	// Populating Variables
 	QuadSideLength = _QuadSideLength;
 	StartingPoint.x = -QuadSideLength / 2;
@@ -32,12 +34,25 @@ Quad::Quad(float _QuadSideLength)
 
 	GLfloat _Vertices_Indexed_Quad[] = {
 		// Index	// Postition			// Colour			// Texture Coords	
+		/* 0 */		Vertices[0].x, Vertices[0].y, Vertices[0].z,	1.0f, 0.0f, 0.0f,	  0 / 52.0f,  1.0f,			// Top Left
+		/* 1 */		Vertices[1].x, Vertices[1].y, Vertices[1].z,	0.0f, 1.0f, 0.0f,	  0 / 52.0f,  0.0f,			// Bottom Left
+		/* 2 */		Vertices[2].x, Vertices[2].y, Vertices[2].z,	1.0f, 0.0f, 1.0f,	  1 / 52.0f,  0.0f,			// Bottom Right
+		/* 3 */		Vertices[3].x, Vertices[3].y, Vertices[3].z,	0.0f, 1.0f, 1.0f,	  1 / 52.0f,  1.0f,			// Top Right
+	};
+	GLfloat _Vertices_Indexed_Quad2[] = {
+		// Index	// Postition			// Colour			// Texture Coords	
 		/* 0 */		Vertices[0].x, Vertices[0].y, Vertices[0].z,	1.0f, 0.0f, 0.0f,	 -2 / 52.0f,  2.0f,			// Top Left
 		/* 1 */		Vertices[1].x, Vertices[1].y, Vertices[1].z,	0.0f, 1.0f, 0.0f,	 -2 / 52.0f, -2.0f,			// Bottom Left
 		/* 2 */		Vertices[2].x, Vertices[2].y, Vertices[2].z,	1.0f, 0.0f, 1.0f,	  2 / 52.0f, -2.0f,			// Bottom Right
 		/* 3 */		Vertices[3].x, Vertices[3].y, Vertices[3].z,	0.0f, 1.0f, 1.0f,	  2 / 52.0f,  2.0f,			// Top Right
 	};
-	memcpy(&QuadVertices, &_Vertices_Indexed_Quad, 32 * sizeof(GLfloat));
+	if (IsAnimated) {
+		memcpy(&QuadVertices, &_Vertices_Indexed_Quad, 32 * sizeof(GLfloat));
+	}
+	else {
+		memcpy(&QuadVertices, &_Vertices_Indexed_Quad2, 32 * sizeof(GLfloat));
+	}
+
 
 	GLuint _Indices_Quad[] = {
 	0, 1, 2,	// First Tri   ( TL -> BL -> BR )

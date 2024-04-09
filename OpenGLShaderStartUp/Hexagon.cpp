@@ -39,12 +39,12 @@ Hexagon::Hexagon(float _HexSideLength)
 	GLfloat _HexVertices[56] = {
 		// Index	// Postition									// Colour			// Texture Coords	
 		/* 0 */		Vertices[0].x, Vertices[0].y, Vertices[0].z,	1.0f, 0.0f, 0.0f,	0.25 / 52.0f, 1.0f,			// Top Left
-		/* 1 */		Vertices[1].x, Vertices[1].y, Vertices[1].z,	0.0f, 1.0f, 0.0f,	0.0 / 52.0f, 0.5f,			// Middle Left
-		/* 2 */		Vertices[2].x, Vertices[2].y, Vertices[2].z,	1.0f, 0.0f, 1.0f,	0.25 / 52.0f, 0.0f,			// Bottom Left
+		/* 1 */		Vertices[1].x, Vertices[1].y, Vertices[1].z,	1.0f, 1.0f, 0.0f,	0.0 / 52.0f, 0.5f,			// Middle Left
+		/* 2 */		Vertices[2].x, Vertices[2].y, Vertices[2].z,	0.0f, 1.0f, 0.0f,	0.25 / 52.0f, 0.0f,			// Bottom Left
 		/* 3 */		Vertices[3].x, Vertices[3].y, Vertices[3].z,	0.0f, 1.0f, 1.0f,	0.75 / 52.0f, 0.0f,			// Bottom Right
-		/* 4 */		Vertices[4].x, Vertices[4].y, Vertices[4].z,	1.0f, 0.0f, 1.0f,	1.0 / 52.0f, 0.5f,			// Middle Right
-		/* 5 */		Vertices[5].x, Vertices[5].y, Vertices[5].z,	0.0f, 1.0f, 1.0f,	0.75 / 52.0f, 1.0f,			// Top Right
-		/* 6 */		Vertices[6].x, Vertices[6].y, Vertices[6].z,	0.0f, 1.0f, 1.0f,	0.5f / 52.0f, 0.5f,         // Middle Centre
+		/* 4 */		Vertices[4].x, Vertices[4].y, Vertices[4].z,	0.0f, 0.0f, 1.0f,	1.0 / 52.0f, 0.5f,			// Middle Right
+		/* 5 */		Vertices[5].x, Vertices[5].y, Vertices[5].z,	1.0f, 0.0f, 1.0f,	0.75 / 52.0f, 1.0f,			// Top Right
+		/* 6 */		Vertices[6].x, Vertices[6].y, Vertices[6].z,	1.0f, 1.0f, 1.0f,	0.5f / 52.0f, 0.5f,         // Middle Centre
 	};
 	memcpy(&HexVertices, &_HexVertices, 56 * sizeof(GLfloat));
 
@@ -101,5 +101,6 @@ void Hexagon::GenerateInfo()
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(2);
 }
+
 
 

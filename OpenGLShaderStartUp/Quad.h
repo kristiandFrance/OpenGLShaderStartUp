@@ -5,7 +5,7 @@
 class Quad : public Shape
 {
 public:
-	Quad(float _QuadSideLength);
+	Quad(float _QuadSideLength, bool _IsAnimated);
 	~Quad() {};
 
 	void GenerateInfo();
@@ -17,5 +17,6 @@ public:
 private:
 	vertex StartingPoint;
 	float QuadSideLength;
+	bool IsAnimated;
 };
 

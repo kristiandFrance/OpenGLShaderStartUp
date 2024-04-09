@@ -7,6 +7,8 @@ layout (location = 2) in vec2 TexCoords;
 
 // Inputs
 uniform mat4 ModelMat;
+uniform mat4 ViewMat;
+uniform mat4 ProjectionMat;
 
 // Outputs to Fragment Shader
 out vec3 FragColor;
@@ -15,7 +17,7 @@ out vec2 FragTexCoords;
 //  Shader Functionality
 void main()
 {
-	gl_Position = ModelMat *  vec4(Position, 1.0f);
+	gl_Position = ProjectionMat * ViewMat * ModelMat * vec4(Position, 1.0f);
 	FragColor = Color;
 	FragTexCoords = TexCoords;
 }

@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Hexagon.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Quad.cpp" />
@@ -148,15 +149,17 @@
     <None Include="Resources\Shaders\ClipSpace.vert" />
     <None Include="Resources\Shaders\FixedColor.frag" />
     <None Include="Resources\Shaders\FixedTriangle.vert" />
+    <None Include="Resources\Shaders\Image.frag" />
     <None Include="Resources\Shaders\Texture.frag" />
     <None Include="Resources\Shaders\Texture.vert" />
     <None Include="Resources\Shaders\VertexColorChange.frag" />
+    <None Include="Resources\Shaders\VertexColorFade.frag" />
     <None Include="Resources\Shaders\WorldSpace.vert" />
     <None Include="VertexColor.frag" />
     <None Include="VertexColor.vert" />
-    <None Include="VertexColorFade.frag" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Hexagon.h" />
     <ClInclude Include="Quad.h" />
     <ClInclude Include="ShaderLoader.h" />

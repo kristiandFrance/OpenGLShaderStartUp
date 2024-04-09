@@ -6,7 +6,6 @@ in vec2 FragTexCoords;
 uniform sampler2D Texture0;
 uniform int CurrentFrame;
 uniform vec3 ColorJumping;
-uniform vec3 Color;
 
 out vec4 FinalColor;
 

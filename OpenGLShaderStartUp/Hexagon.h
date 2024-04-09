@@ -16,6 +16,7 @@ public:
 	vertex Vertices[7];
 	GLfloat HexVertices[56];
 	GLuint HexIndex[18];
+	glm::mat4 ModelMat2;
 
 private:
 	vertex StartingPoint;
