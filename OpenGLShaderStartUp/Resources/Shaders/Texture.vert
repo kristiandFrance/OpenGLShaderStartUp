@@ -1,23 +1,20 @@
 #version 460 core
 
-// Vertex Data Interpretation
+//vertex data interpretation
 layout (location = 0) in vec3 Position;
-layout (location = 1) in vec3 Color;
-layout (location = 2) in vec2 TexCoords;
+layout (location = 1) in vec2 TexCoords;
+layout (location = 2) in mat4 InstancedModel;
 
-// Inputs
-uniform mat4 ModelMat;
-uniform mat4 ViewMat;
-uniform mat4 ProjectionMat;
+//uniform VP Matrix
+uniform mat4 VP;
 
-// Outputs to Fragment Shader
-out vec3 FragColor;
+
+//outputs to fragment shader
 out vec2 FragTexCoords;
 
-//  Shader Functionality
+//shader functionality
 void main()
 {
-	gl_Position = ProjectionMat * ViewMat * ModelMat * vec4(Position, 1.0f);
-	FragColor = Color;
-	FragTexCoords = TexCoords;
+    gl_Position = VP * InstancedModel * vec4(Position, 1.0f);
+    FragTexCoords = TexCoords;
 }
