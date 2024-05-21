@@ -29,6 +29,8 @@ Camera CameraObj;
 GLuint Program_3DShader;
 
 
+bool secondTexture = false;
+
 //++++++++++++++++++++++++++
 
 
@@ -39,11 +41,13 @@ void InitialSetup()
 	// Create Model Classes
 	StatueModel = new Model("Resources/Models/SM_Prop_Statue_01.obj", &CameraObj, 1,
 							"Resources/Textures/PolygonAncientWorlds_Statue_01.png",
-							0.0f);
+							0.0f, 0.01f, -0.75f, false);
+
+	StatueModel->ToggleControl();
 
 	SwordModel = new Model(	"Resources/Models/Sword.obj", &CameraObj, 1000, 
 							"Resources/Textures/SwordTex.jpg",
-							90.0f);
+							90.0f, 0.02f, 0.0f, true);
 
 
 	// 3D Program Shader
@@ -79,11 +83,15 @@ void Update()
 	// Update Objects/Models
 	CameraObj.Update(DeltaTime, CurrentTime);
 
-	SwordModel->Update(DeltaTime);
-	StatueModel->Update(DeltaTime);
+	SwordModel->Update(DeltaTime, Window);
+	StatueModel->Update(DeltaTime, Window);
 
-
-
+	
+	if (!secondTexture && (CurrentTime > 10.0f))
+	{
+		secondTexture = true;
+		SwordModel->ChangeTexture("Resources/Textures/SwordTex.jpg");
+	}
 }
 
 void Render()

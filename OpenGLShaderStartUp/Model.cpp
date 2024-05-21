@@ -10,36 +10,19 @@
 #include <iostream>
 #include <random>
 
-Model::Model(std::string ObjectFilePath, Camera* _CameraRef, int _InstanceCount, std::string TextureFilePath, float _RotationAngle)
+Model::Model(	std::string ObjectFilePath, Camera* _CameraRef, int _InstanceCount,
+				std::string TextureFilePath, float _RotationAngle, float _scale, 
+				float _VerticalOffset, bool _RandVariance)
 {
 	RotationAngle = _RotationAngle;
+	Scale = glm::vec3(_scale);
+	VerticalOffset = _VerticalOffset;
+	RandVariance = _RandVariance;
 	InstanceCount = _InstanceCount;
 	CameraRef = _CameraRef;
 	InstancedModels = new glm::mat4[InstanceCount];
 
-	// Load the Image Data
-	int ImageWidth;
-	int ImageHeight;
-	int ImageComponents;
-
-	unsigned char* ImageData = stbi_load(TextureFilePath.c_str(),
-		&ImageWidth, &ImageHeight, &ImageComponents, 0);
-
-	// Create and Bind a new texture var
-	glGenTextures(1, &Texture);
-	glBindTexture(GL_TEXTURE_2D, Texture);
-
-	// check how many components he loaded image has
-	GLint LoadedComponents = (ImageComponents == 4) ? GL_RGBA : GL_RGB;
-
-	// Populate the texture with the image data
-	glTexImage2D(GL_TEXTURE_2D, 0, LoadedComponents, ImageWidth, ImageHeight, 0,
-		LoadedComponents, GL_UNSIGNED_BYTE, ImageData);
-
-	// Generate the mipmaps, free the memory and unbind the texture
-	glGenerateMipmap(GL_TEXTURE_2D);
-	stbi_image_free(ImageData);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	ChangeTexture(TextureFilePath);
 
 	std::vector<VertexStandard> Vertices;
 	tinyobj::ObjReaderConfig ReaderConfig;
@@ -62,23 +45,41 @@ Model::Model(std::string ObjectFilePath, Camera* _CameraRef, int _InstanceCount,
 	auto& Attrib = Reader.GetAttrib();
 	auto& Shapes = Reader.GetShapes();
 
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+
 	for (int i = 0; i < InstanceCount; i++)
 	{
 		// Align Instances into a grid and centre it
-		Position = glm::vec3(	std::fmod(i, std::sqrt(InstanceCount)) - std::sqrt(InstanceCount) / 2.0f,
-								0.0f, 
-								float(floor(i / std::sqrt(InstanceCount))) - std::sqrt(InstanceCount) / 2.0f);
+		Position = glm::vec3(	std::fmod(i, std::sqrt(InstanceCount)) - std::sqrt(InstanceCount) / 2.0f,					// x
+								0.0f + VerticalOffset, 																						// y
+								float(floor(i / std::sqrt(InstanceCount))) - std::sqrt(InstanceCount) / 2.0f);				// z
+		glm::vec3 RotationApplyVector = glm::vec3(1.0f, 0.0f, 0.0f);
 
+		if (RandVariance)
+		{
+			// Give Randomness If Requested
+			Position += glm::vec3(	dis(gen) * 0.3,			// x
+									dis(gen) * 0.1, 		// y
+									dis(gen) * 0.3);		// z
+
+			RotationApplyVector += glm::vec3(	-0.05f + dis(gen) * 0.1,        // x
+												-0.2f + dis(gen) * 0.4,         // y
+												-0.2f + dis(gen) * 0.4);        // z
+		}
+
+
+		// Matrix Application
 		TranslationMat = glm::translate(glm::mat4(1.0f), Position);
-		RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(RotationAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+		RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(RotationAngle), RotationApplyVector);
 		ScaleMat = glm::scale(glm::mat4(1.0f), Scale);
 		ModelMat = TranslationMat * RotationMat * ScaleMat;
 
 		InstancedModels[i] = (ModelMat);
-
-		std::cout << Position.x << ", " << Position.y << ", " << Position.z << "\n";
 	}
 
+	//ClearModelData();
 
 	// Loading The Model
 	//=================================================
@@ -129,8 +130,6 @@ Model::Model(std::string ObjectFilePath, Camera* _CameraRef, int _InstanceCount,
 	DrawCount = (GLuint)Vertices.size();
 
 	// Create the Vertex Array and associated buffers
-	GLuint VBO;
-	GLuint InstanceVBO;
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -182,28 +181,45 @@ Model::Model(std::string ObjectFilePath, Camera* _CameraRef, int _InstanceCount,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+
 }
 
 Model::~Model()
 {
 }
 
-void Model::Update(float DeltaTime)
+void Model::Update(float DeltaTime, GLFWwindow* _WindowRef)
 {
 
 	VPMatrix = CameraRef->GetProjMat() * CameraRef->GetViewMat();
 	
-	//for (int i = 0; i < InstanceCount; i++)
-	//{
-	//	Position = glm::vec3(float(std::fmod(i, std::sqrt(InstanceCount))), 0.0f, float(floor(i / std::sqrt(InstanceCount))));
-	//	TranslationMat = glm::translate(glm::mat4(1.0f), Position);
-	//	RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(RotationAngle), glm::vec3(1.0f, 0.0f, 0.0f));
-	//	ScaleMat = glm::scale(glm::mat4(1.0f), Scale);
-	//	ModelMat = TranslationMat * RotationMat * ScaleMat;
-	//
-	//	InstancedModels[i] = (ModelMat);
-	//}
+	if (Controlling)
+	{
+		ProcessInput(DeltaTime, _WindowRef);
 
+		for (int i = 0; i < InstanceCount; i++)
+		{
+			TranslationMat = glm::translate(glm::mat4(1.0f), Position);
+			RotationMat = glm::rotate(glm::mat4(1.0f), glm::radians(RotationAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+			ScaleMat = glm::scale(glm::mat4(1.0f), Scale);
+			ModelMat = TranslationMat * RotationMat * ScaleMat;
+
+			InstancedModels[i] = (ModelMat);
+		}
+		std::cout << Position.x << ", " << Position.y << ", " << Position.z << "\n";
+
+		glBindVertexArray(VAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, InstanceVBO);
+		glBufferData(GL_ARRAY_BUFFER, InstanceCount * sizeof(glm::mat4), InstancedModels, GL_DYNAMIC_DRAW);
+
+		glBindVertexArray(0);
+	}
+
+	
+
+	
 	
 }
 
@@ -227,4 +243,90 @@ void Model::Render(GLuint* Program)
 	glBindVertexArray(0);
 	glUseProgram(0);
 
+}
+
+void Model::ChangeTexture(std::string NewTexture)
+{
+
+
+	// Load the Image Data
+	int ImageWidth;
+	int ImageHeight;
+	int ImageComponents;
+
+	unsigned char* ImageData = stbi_load(NewTexture.c_str(),
+		&ImageWidth, &ImageHeight, &ImageComponents, 0);
+
+	// Create and Bind a new texture var
+	//glDeleteTextures(1, &Texture);
+	glGenTextures(1, &Texture);
+	glBindTexture(GL_TEXTURE_2D, Texture);
+
+	// check how many components he loaded image has
+	GLint LoadedComponents = (ImageComponents == 4) ? GL_RGBA : GL_RGB;
+
+	// Populate the texture with the image data
+	glTexImage2D(GL_TEXTURE_2D, 0, LoadedComponents, ImageWidth, ImageHeight, 0,
+		LoadedComponents, GL_UNSIGNED_BYTE, ImageData);
+
+	// Generate the mipmaps, free the memory and unbind the texture
+	glGenerateMipmap(GL_TEXTURE_2D);
+	stbi_image_free(ImageData);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+}
+
+void Model::ToggleControl()
+{
+	Controlling = !Controlling;
+}
+
+void Model::ClearModelData()
+{
+	Position = glm::vec3(0.0f, 0.0f, 0.0f);
+	RotationAngle = 0.0f;
+	Scale = glm::vec3(0.0f);
+}
+
+void Model::ProcessInput(float DeltaTime, GLFWwindow* _WindowRef)
+{
+	float Magnitude = 10.0f;
+	glm::vec3 CameraVec = glm::normalize(CameraRef->GetCameraTargetPos() - CameraRef->GetCameraPos());
+
+	if (glfwGetKey(_WindowRef, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		Position += glm::vec3(DeltaTime * Magnitude) * glm::vec3(1.0f, 0.0f, 1.0f) * CameraVec;
+	}
+	if (glfwGetKey(_WindowRef, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		Position += glm::vec3(DeltaTime * Magnitude) * glm::vec3(-1.0f, 0.0f, -1.0f) * CameraVec;
+	}
+	if (glfwGetKey(_WindowRef, GLFW_KEY_Q) == GLFW_PRESS)
+	{
+		Position += glm::vec3(DeltaTime * Magnitude) * glm::vec3(0.0f, -1.0f, 0.0f);
+	}
+	if (glfwGetKey(_WindowRef, GLFW_KEY_E) == GLFW_PRESS)
+	{
+		Position += glm::vec3(DeltaTime * Magnitude) * glm::vec3(0.0f, 1.0f, 0.0f);
+	}
+	if (glfwGetKey(_WindowRef, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		glm::vec3 LeftVec;
+		LeftVec.x = CameraVec.z;
+		LeftVec.y = CameraVec.y;
+		LeftVec.z = -CameraVec.x;
+
+		Position += glm::vec3(DeltaTime * Magnitude) * glm::vec3(1.0f, 0.0f, 1.0f) * LeftVec;
+	}
+	if (glfwGetKey(_WindowRef, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		glm::vec3 RightVec;
+		RightVec.x = -CameraVec.z;
+		RightVec.y = -CameraVec.y;
+		RightVec.z = CameraVec.x;
+
+		Position += glm::vec3(DeltaTime * Magnitude) * glm::vec3(1.0f, 0.0f, 1.0f) * RightVec;
+	}
+	
+	
 }

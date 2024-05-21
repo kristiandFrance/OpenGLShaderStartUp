@@ -21,6 +21,8 @@ public:
 
     glm::mat4 GetViewMat();
     glm::mat4 GetProjMat();
+	glm::vec3 GetCameraPos();
+    glm::vec3 GetCameraTargetPos();
 
 protected:
     float Distance = 4;

@@ -32,3 +32,13 @@ glm::mat4 Camera::GetProjMat()
 {
     return ProjectionMat;
 }
+
+glm::vec3 Camera::GetCameraPos()
+{
+    return CameraPos;
+}
+
+glm::vec3 Camera::GetCameraTargetPos()
+{
+    return CameraTargetPos;
+}

@@ -36,31 +36,48 @@ struct VertexStandard
 class Model
 {
 public:
-	Model(std::string FilePath, Camera* _CameraRef, int _InstanceCount, std::string TextureFilePath, float _RotationAngle);
+	Model(	std::string FilePath, Camera* _CameraRef, int _InstanceCount,
+			std::string TextureFilePath, float _RotationAngle, float _scale, 
+			float _VerticalOffset, bool _RandVariance);
 	~Model();
 
-	virtual void Update(float DeltaTime);
+	virtual void Update(float DeltaTime, GLFWwindow* _WindowRef);
 	virtual void Render(GLuint* Program);
+	virtual void ChangeTexture(std::string NewTexture);
+	virtual void ToggleControl();
+
+	
 
 
+
+protected:
+	void ClearModelData();
+	void ProcessInput(float DeltaTime, GLFWwindow* _WindowRef);
+
+
+	bool RandVariance;
+
+	float VerticalOffset;
 	glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::mat4 TranslationMat;
 
 	float RotationAngle;
 	glm::mat4 RotationMat;
 
-	glm::vec3 Scale = glm::vec3(0.02f);
+	glm::vec3 Scale;
 	glm::mat4 ScaleMat;
 
 	glm::mat4 ModelMat;
 
 
+	bool Controlling = false;
 
-protected:
 	// Init Texture
 	GLuint Texture;
 	Camera* CameraRef;
 	GLuint VAO;
+	GLuint VBO;
+	GLuint InstanceVBO;
 	GLuint DrawCount;
 	GLint InstanceCount;
 	glm::mat4* InstancedModels;
