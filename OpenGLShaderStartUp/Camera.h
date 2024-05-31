@@ -16,7 +16,7 @@ public:
     Camera();
     ~Camera();
 
-    void Update(float DeltaTime, float CurrentTime);
+    void Update(float DeltaTime, float CurrentTime, GLFWwindow* _WindowRef);
 
 
     glm::mat4 GetViewMat();
@@ -28,6 +28,14 @@ protected:
     float Distance = 4;
     float FOV = 103.0f;
     float AspectRatio = 1;
+    float Yaw;
+    float Pitch;
+    float LastMouseX;
+    float LastMouseY;
+    bool FirstMouse = true;
+    float MouseSensitivity = 0.1f;
+	bool HideMouse = false;
+    bool InvertMouse = false;
 
     glm::mat4 ProjectionMat;
     glm::mat4 ViewMat;

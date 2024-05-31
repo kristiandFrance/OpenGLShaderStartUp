@@ -191,7 +191,7 @@ Model::~Model()
 
 void Model::Update(float DeltaTime, GLFWwindow* _WindowRef)
 {
-
+	
 	VPMatrix = CameraRef->GetProjMat() * CameraRef->GetViewMat();
 	
 	if (Controlling)
@@ -290,43 +290,5 @@ void Model::ClearModelData()
 
 void Model::ProcessInput(float DeltaTime, GLFWwindow* _WindowRef)
 {
-	float Magnitude = 10.0f;
-	glm::vec3 CameraVec = glm::normalize(CameraRef->GetCameraTargetPos() - CameraRef->GetCameraPos());
 
-	if (glfwGetKey(_WindowRef, GLFW_KEY_W) == GLFW_PRESS)
-	{
-		Position += glm::vec3(DeltaTime * Magnitude) * glm::vec3(1.0f, 0.0f, 1.0f) * CameraVec;
-	}
-	if (glfwGetKey(_WindowRef, GLFW_KEY_S) == GLFW_PRESS)
-	{
-		Position += glm::vec3(DeltaTime * Magnitude) * glm::vec3(-1.0f, 0.0f, -1.0f) * CameraVec;
-	}
-	if (glfwGetKey(_WindowRef, GLFW_KEY_Q) == GLFW_PRESS)
-	{
-		Position += glm::vec3(DeltaTime * Magnitude) * glm::vec3(0.0f, -1.0f, 0.0f);
-	}
-	if (glfwGetKey(_WindowRef, GLFW_KEY_E) == GLFW_PRESS)
-	{
-		Position += glm::vec3(DeltaTime * Magnitude) * glm::vec3(0.0f, 1.0f, 0.0f);
-	}
-	if (glfwGetKey(_WindowRef, GLFW_KEY_A) == GLFW_PRESS)
-	{
-		glm::vec3 LeftVec;
-		LeftVec.x = CameraVec.z;
-		LeftVec.y = CameraVec.y;
-		LeftVec.z = -CameraVec.x;
-
-		Position += glm::vec3(DeltaTime * Magnitude) * glm::vec3(1.0f, 0.0f, 1.0f) * LeftVec;
-	}
-	if (glfwGetKey(_WindowRef, GLFW_KEY_D) == GLFW_PRESS)
-	{
-		glm::vec3 RightVec;
-		RightVec.x = -CameraVec.z;
-		RightVec.y = -CameraVec.y;
-		RightVec.z = CameraVec.x;
-
-		Position += glm::vec3(DeltaTime * Magnitude) * glm::vec3(1.0f, 0.0f, 1.0f) * RightVec;
-	}
-	
-	
 }
