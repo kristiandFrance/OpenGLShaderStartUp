@@ -1,16 +1,14 @@
 #include "Model.h"
 
-// Library Defines
-#define TINYOBJLOADER_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMPLEMENTATION
+#include "stb_image.h"
 
-// Library Includes
 #include <tiny_obj_loader.h>
-#include <stb_image.h>
+
 #include <iostream>
 #include <random>
 
-Model::Model(	std::string ObjectFilePath, Camera* _CameraRef, int _InstanceCount,
+Model::Model(	std::string ObjectFilePath, Camera* _CameraRef, Skybox* _SkyboxRef, int _InstanceCount,
 				std::string TextureFilePath, float _RotationAngle, float _scale, 
 				float _VerticalOffset, bool _RandVariance)
 {
@@ -20,6 +18,7 @@ Model::Model(	std::string ObjectFilePath, Camera* _CameraRef, int _InstanceCount
 	RandVariance = _RandVariance;
 	InstanceCount = _InstanceCount;
 	CameraRef = _CameraRef;
+	SkyboxRef = _SkyboxRef;
 	InstancedModels = new glm::mat4[InstanceCount];
 
 	ChangeTexture(TextureFilePath);
@@ -110,14 +109,14 @@ Model::Model(	std::string ObjectFilePath, Camera* _CameraRef, int _InstanceCount
 					};
 				}
 
-				/*if (TinyObjVertex.normal_index >= 0) // Negative states no Normal data
+				if (TinyObjVertex.normal_index >= 0) // Negative states no Normal data
 				{
 					Vertex.normal = {
 						Attrib.normals[3 * size_t(TinyObjVertex.normal_index) + 0],
 						Attrib.normals[3 * size_t(TinyObjVertex.normal_index) + 1],
 						Attrib.normals[3 * size_t(TinyObjVertex.normal_index) + 2],
 					};
-				}*/
+				}
 				Vertices.push_back(Vertex);
 			}
 			ReadIndexOffset += FaceVertexCount;
@@ -149,27 +148,30 @@ Model::Model(	std::string ObjectFilePath, Camera* _CameraRef, int _InstanceCount
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (void*)offsetof(VertexStandard, texcoord));
 
+	// Create the VertexAttribPointer for Normal
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(VertexStandard), (void*)offsetof(VertexStandard, normal));
+
 
 	glBindBuffer(GL_ARRAY_BUFFER, InstanceVBO);
 	glBufferData(GL_ARRAY_BUFFER, InstanceCount * sizeof(glm::mat4), InstancedModels, GL_DYNAMIC_DRAW);
 
 	// Create the VertexAttribPointer for Instanced MVP
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
-	glVertexAttribDivisor(2, 1);
-
 	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(1 * sizeof(glm::vec4)));
+	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
 	glVertexAttribDivisor(3, 1);
 
 	glEnableVertexAttribArray(4);
-	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(1 * sizeof(glm::vec4)));
 	glVertexAttribDivisor(4, 1);
 
 	glEnableVertexAttribArray(5);
-	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
 	glVertexAttribDivisor(5, 1);
 
+	glEnableVertexAttribArray(6);
+	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+	glVertexAttribDivisor(6, 1);
 
 
 	glBindVertexArray(0);
@@ -218,31 +220,43 @@ void Model::Update(float DeltaTime, GLFWwindow* _WindowRef)
 	}
 
 	
-
-	
-	
 }
 
 void Model::Render(GLuint* Program)
 {
+	if (!SkyboxRef)
+	{
+		std::cerr << "Error: SkyboxRef is null." << std::endl;
+		return;
+	}
+
+	if (SkyboxRef->TextureID_Skybox == 0)
+	{
+		std::cerr << "Error: Skybox texture is not initialized." << std::endl;
+		return;
+	}
 
 	glUseProgram(*Program);
 	glBindVertexArray(VAO);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, Texture);
-
 	glUniform1i(glGetUniformLocation(*Program, "Texture0"), 0);
 
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, SkyboxRef->TextureID_Skybox);
+	glUniform1i(glGetUniformLocation(*Program, "Texture_Skybox"), 1);
+
+	glUniform3fv(glGetUniformLocation(*Program, "CameraPos"), 1, glm::value_ptr(CameraRef->GetCameraPos()));
 	glUniformMatrix4fv(glGetUniformLocation(*Program, "VP"), 1, GL_FALSE, glm::value_ptr(VPMatrix));
 
 	glDrawArraysInstanced(DrawType, 0, DrawCount, InstanceCount);
 
-
 	// Unbind Assets
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 	glBindVertexArray(0);
 	glUseProgram(0);
-
 }
 
 void Model::ChangeTexture(std::string NewTexture)

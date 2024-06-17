@@ -140,11 +140,15 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Hexagon.cpp" />
+    <ClCompile Include="LightColorSpheres.cpp" />
+    <ClCompile Include="LightingManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Quad.cpp" />
     <ClCompile Include="ShaderLoader.cpp" />
     <ClCompile Include="Shape.cpp" />
+    <ClCompile Include="Skybox.cpp" />
+    <ClCompile Include="tiny_obj_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PositionOnly.vert" />
@@ -152,6 +156,11 @@
     <None Include="Resources\Shaders\FixedColor.frag" />
     <None Include="Resources\Shaders\FixedTriangle.vert" />
     <None Include="Resources\Shaders\Image.frag" />
+    <None Include="Resources\Shaders\Lighting_BlinnPhong.frag" />
+    <None Include="Resources\Shaders\LightSphere.frag" />
+    <None Include="Resources\Shaders\LightSphere.vert" />
+    <None Include="Resources\Shaders\Skybox.frag" />
+    <None Include="Resources\Shaders\Skybox.vert" />
     <None Include="Resources\Shaders\Texture.frag" />
     <None Include="Resources\Shaders\Texture.vert" />
     <None Include="Resources\Shaders\VertexColorChange.frag" />
@@ -163,10 +172,13 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Hexagon.h" />
+    <ClInclude Include="LightColorSpheres.h" />
+    <ClInclude Include="LightingManager.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Quad.h" />
     <ClInclude Include="ShaderLoader.h" />
     <ClInclude Include="Shape.h" />
+    <ClInclude Include="Skybox.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

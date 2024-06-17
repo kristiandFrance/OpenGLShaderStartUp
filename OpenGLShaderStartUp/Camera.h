@@ -1,7 +1,6 @@
 #pragma once
 
 // Library Includes
-#define STB_IMAGE_IMPLEMENTATION
 #include <glew.h>
 #include <glfw3.h>
 #include <glm.hpp>
@@ -18,15 +17,17 @@ public:
 
     void Update(float DeltaTime, float CurrentTime, GLFWwindow* _WindowRef);
 
-
     glm::mat4 GetViewMat();
     glm::mat4 GetProjMat();
 	glm::vec3 GetCameraPos();
     glm::vec3 GetCameraTargetPos();
 
+    float FOV = 103.0f;
+    float MinFOV = 10.0f;
+    float MaxFOV = 103.0f;
+
 protected:
     float Distance = 4;
-    float FOV = 103.0f;
     float AspectRatio = 1;
     float Yaw;
     float Pitch;

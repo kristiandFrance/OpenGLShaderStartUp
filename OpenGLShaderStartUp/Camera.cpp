@@ -142,7 +142,6 @@ void Camera::Update(float DeltaTime, float CurrentTime, GLFWwindow* _WindowRef)
 
 
     // Calculate the Projection Matrix 
-
     ProjectionMat = glm::perspective(glm::radians(FOV), AspectRatio, 0.1f, 100.0f);
     ViewMat = glm::lookAt(CameraPos, CameraTargetPos, CameraUpDir);
 
